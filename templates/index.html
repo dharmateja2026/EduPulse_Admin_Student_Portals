@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EduPulse · Course Feedback</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-mark">✦</div><span>EduPulse</span></div>
+    <div class="side-label">STUDENT WORKSPACE</div>
+    <button class="nav-link active" data-view="dashboard"><span>▦</span> Dashboard</button>
+    <button class="nav-link" data-view="feedback"><span>☷</span> Give Feedback</button>
+    
+    <div class="sidebar-bottom"><div class="privacy-icon">✓</div><div><b>Anonymous by design</b><small>Your identity is never requested.</small></div></div>
+  </aside>
+  <main class="main-content">
+    <header class="topbar">
+      <div><div class="eyebrow">STUDENT EXPERIENCE · {{ branch_name }} · SEMESTER {{ semester }}</div><h1 id="page-title">Dashboard</h1><p class="subtitle">Your branch and semester course feedback overview</p></div>
+      <div class="top-actions"><span class="live-dot"></span><span>{{ student }}</span><a class="logout-link" href="{{ url_for('logout') }}">Logout</a><div class="avatar">S</div></div>
+    </header>
+
+    <section class="view active" id="view-dashboard">
+      <div class="welcome-row"><div><h2>Welcome 👋</h2><p>{{ branch_name }} · Semester {{ semester }} — your subjects and feedback.</p></div><button class="primary-btn" data-go="feedback">＋ Submit feedback</button></div>
+      <div class="stats-grid">
+        <article class="stat-card"><div class="stat-top"><span class="stat-icon purple">☷</span><span class="stat-label">Total responses</span></div><div class="stat-value" id="total-responses">0</div><div class="stat-foot">Across all courses</div></article>
+        <article class="stat-card"><div class="stat-top"><span class="stat-icon blue">★</span><span class="stat-label">Average rating</span></div><div class="stat-value"><span id="overall-average">0.00</span><small> / 5</small></div><div class="stat-foot">Based on submitted ratings</div></article>
+        <article class="stat-card"><div class="stat-top"><span class="stat-icon green">▤</span><span class="stat-label">Subjects in semester</span></div><div class="stat-value" id="subject-count">{{ courses|length }}</div><div class="stat-foot">Your current semester</div></article>
+        <article class="stat-card"><div class="stat-top"><span class="stat-icon orange">↗</span><span class="stat-label">Ratings recorded</span></div><div class="stat-value" id="total-ratings">0</div><div class="stat-foot">5 questions per response</div></article>
+      </div>
+      <div class="charts-grid">
+        <article class="panel chart-panel"><div class="panel-heading"><div><h3>Course rating comparison</h3><p>Average score by subject</p></div><span class="chart-chip">Scale 1–5</span></div><div class="chart-wrap"><canvas id="courseChart"></canvas></div></article>
+        <article class="panel chart-panel"><div class="panel-heading"><div><h3>Rating distribution</h3><p>How students rated their courses</p></div></div><div class="donut-wrap"><canvas id="distributionChart"></canvas></div><div class="legend-row"><span><i class="dot dot1"></i>5 Excellent</span><span><i class="dot dot2"></i>4 Good</span><span><i class="dot dot3"></i>3 Fair</span><span><i class="dot dot4"></i>1–2 Low</span></div></article>
+      </div>
+      <article class="panel course-panel"><div class="panel-heading"><div><h3>Course performance</h3><p>Response volume and average ratings</p></div><span class="chart-chip">Your semester</span></div><div class="course-list" id="course-list"></div></article>
+    </section>
+
+    <section class="view" id="view-feedback">
+      <div class="section-intro"><span class="section-kicker">YOUR VOICE MATTERS</span><h2>Share your course feedback</h2><p>Your responses are anonymous. Rate each statement from 1 (Poor) to 5 (Excellent).</p></div>
+      <form id="feedback-form" class="panel feedback-panel">
+        <label class="field-label" for="course-select">Select course <span>*</span></label>
+        <select id="course-select" required>
+          <option value="">Choose a subject…</option>
+          {% for course in courses %}<option value="{{ course.code }}">{{ course.code }} — {{ course.name }}</option>{% endfor %}
+        </select>
+        <div class="form-divider"></div>
+        <div class="question-header"><div><h3>Course experience</h3><p>All five questions are required</p></div><span class="question-count">5 QUESTIONS</span></div>
+        <div id="questions">
+          {% for question in questions %}
+          <div class="question-card" data-question="{{ loop.index0 }}"><div class="question-number">{{ "%02d"|format(loop.index) }}</div><div class="question-body"><h4>{{ question }}</h4><div class="rating-options" role="radiogroup" aria-label="{{ question }}">
+            {% set qi = loop.index0 %}{% for n in range(1,6) %}<label class="rating-option"><input type="radio" name="q{{ qi }}" value="{{ n }}"><span>{{ n }}</span></label>{% endfor %}
+          </div><div class="rating-caption"><span>1 · Poor</span><span>5 · Excellent</span></div></div></div>
+          {% endfor %}
+        </div>
+        <label class="field-label" for="comment">Additional comments <span class="optional">OPTIONAL</span></label>
+        <textarea id="comment" rows="3" maxlength="500" placeholder="What is working well, or what could be improved? (Avoid including names or personal details)"></textarea>
+        <div class="textarea-foot"><span>Do not include names or identifying details.</span><span id="char-count">0 / 500</span></div>
+        <div id="form-message" class="form-message" role="status"></div>
+        <div class="form-actions"><span class="secure-note">🔒 Anonymous submission</span><button class="primary-btn" id="submit-btn" type="submit">Submit feedback <span>→</span></button></div>
+      </form>
+    </section>
+
+    <footer>EduPulse <span>•</span> Student feedback, thoughtfully summarized.</footer>
+  </main>
+</div>
+<div id="toast" class="toast"></div>
+<script>
+window.COURSE_CODES = {{ courses|map(attribute='code')|list|tojson }};
+window.QUESTIONS = {{ questions|tojson }};
+</script>
+<script src="{{ url_for('static', filename='student.js') }}"></script>
+</body></html>
